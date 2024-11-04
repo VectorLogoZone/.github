@@ -1,0 +1,36 @@
+name: update
+
+on: 
+  workflow_dispatch
+
+permissions:
+    contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update
+        uses: fileformat/ghashboard@v0.0.9
+        env:
+          LOG_LEVEL: debug
+        with:
+          owners: VectorLogoZone
+          public: true
+          output: profile/README.md
+          token: ${{ secrets.PROFILE_UPDATER_PAT }}
+          
+      - name: Commit
+        run: |
+          DIRTY=$(git diff-files --quiet; echo $?)
+          echo "Dirty: $DIRTY"
+          if [ $DIRTY -ne 0 ]; then
+              git config user.name github-actions
+              git config user.email github-actions@github.com
+              git add .
+              git commit -m "Updated via Github Actions on $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+              git push
+          fi
